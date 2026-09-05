@@ -4,6 +4,7 @@ import json
 import uuid
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from database import db
+from memory_store import put_batch, put_batch_records
 
 router = APIRouter(prefix="/api/upload", tags=["Upload"])
 
@@ -25,6 +26,12 @@ async def upload_csvs(
         bank_records = list(bank_reader)
         ledger_records = list(ledger_reader)
 
+        if not bank_records or not ledger_records:
+            raise HTTPException(
+                status_code=400,
+                detail="CSV files appear empty or are missing the expected columns",
+            )
+
         if db.pool:
             # Create Batch
             await db.execute("""
@@ -45,6 +52,22 @@ async def upload_csvs(
                     INSERT INTO ledger_records (batch_id, invoice_number, txn_date, amount, currency, vendor_name, description, gl_account, raw)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 """, batch_id, l.get("invoice_number", "N/A"), l["txn_date"], float(l["amount"]), l.get("currency", "USD"), l["vendor_name"], l.get("description", ""), l.get("gl_account", "6000-OPEX"), json.dumps(l))
+        else:
+            # No Postgres pool -> keep the uploads in the in-memory store so a
+            # follow-up POST /api/reconcile/{batch_id} actually has data to work
+            # with (mirrors what /api/demo/load does).
+            for idx, b in enumerate(bank_records):
+                b["id"] = f"b-{idx + 1}"
+            for idx, l in enumerate(ledger_records):
+                l["id"] = f"l-{idx + 1}"
+            put_batch({
+                "id": batch_id,
+                "name": name,
+                "status": "uploaded",
+                "total_bank": len(bank_records),
+                "total_ledger": len(ledger_records),
+            })
+            put_batch_records(batch_id, bank_records, ledger_records)
 
         return {
             "batch_id": batch_id,

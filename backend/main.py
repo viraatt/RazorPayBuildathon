@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from config import settings
 from database import db
 from llm_router import llm_router
 from routers import upload, reconcile, batches, matches, exceptions, demo
@@ -39,9 +41,10 @@ async def health_check():
         "status": "ok",
         "database": "connected" if db.pool else "standby",
         "llm_provider": llm_router.primary,
-        "timestamp": "2026-03-31T00:00:00Z"
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True)
+    

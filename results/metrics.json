@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-09-04T19:17:38.648293+00:00Z",
+  "total_bank_records": 53,
+  "total_ledger_records": 62,
+  "ground_truth_matchable_pairs": 40,
+  "ground_truth_trap_pairs": 5,
+  "total_matches_found": 37,
+  "layer_1_matches": 25,
+  "layer_2_matches": 12,
+  "exceptions_classified": 41,
+  "true_positives": 37,
+  "false_positives": 0,
+  "false_negatives": 3,
+  "precision": 1.0,
+  "recall": 0.925,
+  "f1_score": 0.961,
+  "trap_rejection_rate_percent": 100.0,
+  "overall_bank_match_rate_percent": 69.81,
+  "pipeline_latency_ms": 49064.01
+}

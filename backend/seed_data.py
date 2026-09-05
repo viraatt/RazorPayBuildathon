@@ -1,8 +1,14 @@
+import argparse
 import csv
+import os
 import random
 from datetime import datetime, timedelta
 
-def generate_dataset():
+def generate_dataset(output_dir=None, mirror_root=True):
+    if output_dir is None:
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    os.makedirs(output_dir, exist_ok=True)
+
     random.seed(42)  # Deterministic reproducibility
     base_date = datetime(2025, 5, 1)
 
@@ -254,31 +260,72 @@ def generate_dataset():
     random.shuffle(bank_records)
     random.shuffle(ledger_records)
 
+    bank_path = os.path.join(output_dir, "bank_feed.csv")
+    ledger_path = os.path.join(output_dir, "ledger_records.csv")
+    gt_path = os.path.join(output_dir, "ground_truth.csv")
+
     # Write Bank Feed CSV
-    with open("data/bank_feed.csv", "w", newline="", encoding="utf-8") as f:
+    with open(bank_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["reference_id", "txn_date", "amount", "currency", "counterparty", "description"])
         writer.writeheader()
         writer.writerows(bank_records)
 
     # Write Ledger CSV
-    with open("data/ledger_records.csv", "w", newline="", encoding="utf-8") as f:
+    with open(ledger_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["invoice_number", "txn_date", "amount", "currency", "vendor_name", "description", "gl_account"])
         writer.writeheader()
         writer.writerows(ledger_records)
 
     # Write Ground Truth CSV
-    with open("data/ground_truth.csv", "w", newline="", encoding="utf-8") as f:
+    with open(gt_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["bank_ref", "ledger_inv", "expected_match", "category", "notes"])
         writer.writeheader()
         writer.writerows(ground_truth)
 
-    print(f"Generated:")
-    print(f" - data/bank_feed.csv ({len(bank_records)} rows)")
-    print(f" - data/ledger_records.csv ({len(ledger_records)} rows)")
-    print(f" - data/ground_truth.csv ({len(ground_truth)} benchmark entries)")
-    print(f"Total True Matchable Pairs: 40 (25 exact + 15 fuzzy)")
-    print(f"Total Trap Pairs (Should reject): 5")
-    print(f"Total True Exceptions: 25 (8 bank + 17 ledger)")
+    if mirror_root:
+        # Mirror into the repo-root data/ dir for backward compatibility
+        # (the demo resolves backend/data first, so this is just a convenience copy).
+        root_data = os.path.join(os.path.dirname(output_dir), "data")
+        if os.path.realpath(root_data) != os.path.realpath(output_dir):
+            os.makedirs(root_data, exist_ok=True)
+            for src in (bank_path, ledger_path, gt_path):
+                dst = os.path.join(root_data, os.path.basename(src))
+                with open(src, "r", encoding="utf-8") as fsrc, open(dst, "w", encoding="utf-8") as fdst:
+                    fdst.write(fsrc.read())
+
+    n_true = sum(1 for g in ground_truth if g["expected_match"] == "TRUE")
+    n_traps = sum(1 for g in ground_truth if g["category"] == "trap_do_not_match")
+    n_exceptions = sum(1 for g in ground_truth if g["expected_match"] == "FALSE")
+
+    print("Generated:")
+    print(f" - {bank_path} ({len(bank_records)} rows)")
+    print(f" - {ledger_path} ({len(ledger_records)} rows)")
+    print(f" - {gt_path} ({len(ground_truth)} benchmark entries)")
+    print(f"Total True Matchable Pairs: {n_true} (25 exact + 15 fuzzy)")
+    print(f"Total Trap Pairs (Should reject): {n_traps}")
+    print(f"Total True Exceptions: {n_exceptions}")
+
+    return {
+        "bank_records": len(bank_records),
+        "ledger_records": len(ledger_records),
+        "ground_truth": len(ground_truth),
+        "matchable_pairs": n_true,
+        "trap_pairs": n_traps,
+        "exceptions": n_exceptions,
+    }
+
 
 if __name__ == "__main__":
-    generate_dataset()
+    parser = argparse.ArgumentParser(
+        description="Generate the synthetic reconciliation benchmark CSV dataset"
+    )
+    parser.add_argument(
+        "--out-dir", default=None,
+        help="Output directory (default: <repo>/backend/data; mirrored to <repo>/data by default)",
+    )
+    parser.add_argument(
+        "--no-mirror", action="store_true",
+        help="Do not mirror the CSVs into <repo>/data",
+    )
+    args = parser.parse_args()
+    generate_dataset(output_dir=args.out_dir, mirror_root=not args.no_mirror)

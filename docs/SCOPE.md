@@ -2,11 +2,11 @@
 
 ## In Scope (v1)
 
-- Synthetic bank feed CSV (~58 records) + ledger CSV (~62 records)
+- Synthetic bank feed CSV (~53 records) + ledger CSV (~62 records)
 - Ground truth labels for evaluation
 - Pre-seeded demo data (one-click)
 - Layer 1: Deterministic matching (exact ref, amount ±$0.02, date ±1 day)
-- Layer 2: LLM fuzzy matching (Gemini 2.0 Flash primary, Groq fallback)
+- Layer 2: LLM fuzzy matching (Gemini 3.6 Flash primary, local heuristic fallback)
 - Layer 3: Exception classification (5 categories)
 - Confidence scoring (0.00-1.00)
 - CSV upload UI (drag-and-drop)

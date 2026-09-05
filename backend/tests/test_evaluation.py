@@ -3,7 +3,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Adjust path to import from pipeline
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -106,7 +106,7 @@ async def run_benchmark():
     overall_match_rate = round((len(all_matches) / max(len(bank_records), 1)) * 100, 2)
     
     metrics = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "total_bank_records": len(bank_records),
         "total_ledger_records": len(ledger_records),
         "ground_truth_matchable_pairs": len(expected_matches),
@@ -143,7 +143,7 @@ async def run_benchmark():
     report_md = f"""# Benchmark Verification Report
 
 > **Evaluation Date**: {metrics['timestamp']}  
-> **LLM Provider**: Gemini 2.0 Flash / Groq Llama 3.3  
+> **LLM Provider**: Gemini 3.6 Flash (heuristic fallback)  
 
 ## Key Verification Metrics
 
@@ -158,7 +158,7 @@ async def run_benchmark():
 
 ## Layer Breakdown
 - **Layer 1 (Deterministic Rules)**: {len(l1_matches)} exact matches resolved in {l1_duration}ms.
-- **Layer 2 (Gemini 2.0 Flash Reasoning)**: {len(l2_matches)} fuzzy matches resolved in {l2_duration}ms.
+- **Layer 2 (Gemini 3.6 Flash Reasoning)**: {len(l2_matches)} fuzzy matches resolved in {l2_duration}ms.
 - **Layer 3 (Forensic Exceptions)**: {len(exceptions)} items categorized (unreconciled fee spikes, missing ledger accruals, date drift).
 - **False Positives**: {fp} (Zero accidental matches on coincidental amounts).
 """

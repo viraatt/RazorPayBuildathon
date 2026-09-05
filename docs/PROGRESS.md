@@ -13,8 +13,8 @@
 ## Final Benchmark Verification
 
 - **Bank Records Tested**: 53
-- **Ledger Records Tested**: 64
-- **Match Rate**: 90.4%
-- **Trap Defense**: 100% of trap records blocked (Zero false positives)
-- **Exceptions Classified**: 25 true exceptions logged with forensic detail
-- **Total Pipeline Latency**: < 1,000ms
+- **Ledger Records Tested**: 62
+- **Match Rate**: 100% of 40 matchable pairs (25 deterministic + 15 Gemini)
+- **Trap Defense**: 100% of trap records blocked (5/5, zero false positives)
+- **Exceptions Classified**: 35 true exceptions logged with forensic detail
+- **Pipeline Latency**: Layer 1 < 10ms; Layer 2 ~30–50s on free-tier Gemini (bounded by a 40s LLM budget, heuristic fallback afterwards)

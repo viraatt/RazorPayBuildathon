@@ -18,7 +18,7 @@ CREATE TABLE batches (
     matched INT DEFAULT 0,
     exceptions INT DEFAULT 0,
     match_rate DECIMAL(5, 2) DEFAULT 0.00,
-    llm_model VARCHAR(50) DEFAULT 'gemini-2.0-flash',
+    llm_model VARCHAR(50) DEFAULT 'gemini-3.6-flash',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

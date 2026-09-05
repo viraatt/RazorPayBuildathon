@@ -4,7 +4,9 @@ pydantic==2.10.4
 pydantic-settings==2.7.0
 asyncpg==0.30.0
 python-multipart==0.0.20
-google-genai==0.1.1
+# NOTE: google-genai deleted - 0.1.1 never published on PyPI and the package is unused
+# (llm_router.py talks to the Gemini HTTP API directly via urllib). groq kept for parity
+# but is also currently unused by the codebase.
 groq==0.15.0
 rapidfuzz==3.11.0
 pandas==2.2.3

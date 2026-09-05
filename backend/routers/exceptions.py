@@ -1,12 +1,14 @@
 from fastapi import APIRouter
 from database import db
+from memory_store import get_batch_exceptions as get_store_exceptions
 
 router = APIRouter(prefix="/api/exceptions", tags=["Exceptions"])
+
 
 @router.get("")
 async def get_exceptions(batch_id: str):
     if not db.pool:
-        return []
+        return get_store_exceptions(batch_id)
     query = """
         SELECT 
             e.id,

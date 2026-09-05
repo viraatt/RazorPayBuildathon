@@ -1,12 +1,14 @@
 from fastapi import APIRouter
 from database import db
+from memory_store import get_batch_matches as get_store_matches
 
 router = APIRouter(prefix="/api/matches", tags=["Matches"])
+
 
 @router.get("")
 async def get_matches(batch_id: str):
     if not db.pool:
-        return []
+        return get_store_matches(batch_id)
     query = """
         SELECT 
             m.id,

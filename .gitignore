@@ -15,5 +15,7 @@ out/
 .DS_Store
 data/*.csv
 !data/.gitkeep
+# Keep the deterministic synthetic benchmark datasets tracked (backend/data is canonical)
+backend/data/*.csv
 dist/
 build/

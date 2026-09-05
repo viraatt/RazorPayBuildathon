@@ -37,9 +37,13 @@ export default function ReconcilerDashboard() {
 
   const loadDemoData = async () => {
     setLoading(true)
-    setStatusMessage('Executing 3-Layer Reconciliation (Deterministic -> Gemini 2.0 -> Exceptions)...')
+    setStatusMessage('Executing 3-Layer Reconciliation (Deterministic -> Gemini Flash -> Exceptions)...')
     try {
       const res = await fetch(`${API_BASE}/api/demo/load`, { method: 'POST' })
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        throw new Error(errBody.detail || `Demo request failed with status ${res.status}`)
+      }
       const data = await res.json()
       setBatchSummary(data)
       
@@ -80,12 +84,20 @@ export default function ReconcilerDashboard() {
         method: 'POST',
         body: formData
       })
+      if (!upRes.ok) {
+        const errBody = await upRes.json().catch(() => ({}))
+        throw new Error(errBody.detail || `Upload failed with status ${upRes.status}`)
+      }
       const upData = await upRes.json()
 
       setStatusMessage('Running 3-Layer Pipeline on uploaded dataset...')
       const recRes = await fetch(`${API_BASE}/api/reconcile/${upData.batch_id}`, {
         method: 'POST'
       })
+      if (!recRes.ok) {
+        const errBody = await recRes.json().catch(() => ({}))
+        throw new Error(errBody.detail || `Reconciliation failed with status ${recRes.status}`)
+      }
       const recData = await recRes.json()
       setBatchSummary(recData)
 
@@ -120,7 +132,7 @@ export default function ReconcilerDashboard() {
                 </span>
               </h1>
               <p className="text-sm text-slate-400">
-                Multi-source ledger verification: Deterministic rules + Gemini 2.0 Flash reasoning
+                Multi-source ledger verification: Deterministic rules + Gemini 3.6 Flash reasoning
               </p>
             </div>
           </div>
@@ -138,7 +150,7 @@ export default function ReconcilerDashboard() {
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium text-sm transition-all shadow-lg shadow-emerald-950/50"
           >
             {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            Load Benchmark Demo (58 Records)
+            Load Benchmark Demo
           </button>
         </div>
       </header>
@@ -353,7 +365,7 @@ export default function ReconcilerDashboard() {
                 <div className="text-sm text-slate-300 mt-1">Exact ref ID, date proximity ≤1d, amount equality. 0ms LLM latency.</div>
               </div>
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                <div className="text-xs text-purple-400 font-bold uppercase">Layer 2: Gemini 2.0 Flash</div>
+                <div className="text-xs text-purple-400 font-bold uppercase">Layer 2: Gemini 3.6 Flash</div>
                 <div className="text-sm text-slate-300 mt-1">Batched semantic reasoning on entity aliases, wire fee deltas, ACH lag.</div>
               </div>
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
